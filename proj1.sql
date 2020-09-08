@@ -152,16 +152,17 @@ AS
   with x as (select min, max from q4i where yearid=2016),
        y as (select * from salaries where yearid=2016),
        binid as (values (0), (1), (2), (3), (4), (5), (6), (7), (8), (9)),
+       z as (select column1 as c, min+1.0/10.0*column1*(max-min) as low, min+1.0/10.0*(column1+1)*(max-min) as high
+             from x, binid),
+       p as (select column1 as c, salary
+             from x, binid, y
+             where ((salary>=min+1.0/10.0*column1*(max-min) and salary<min+1.0/10.0*(column1+1)*(max-min)) or (c=9 and salary=max)  ))
 
-
-      z as (select column1 as c, min+1.0/10.0*column1*(max-min) as low, min+1.0/10.0*(column1+1)*(max-min) as high,
-             salary
-      from x, binid, y
-      where ((salary>=min+1.0/10.0*column1*(max-min) and salary<min+1.0/10.0*(column1+1)*(max-min)) or (c=9 and salary=max)  ))
-
-  select c, low, high, count(*)
+  select z.c, low, high, count(p.c)
   from z
-  group by c
+  left outer join p
+  on z.c = p.c
+  group by z.c
 ;
 
 -- Question 4iii
